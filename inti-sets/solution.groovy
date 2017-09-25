@@ -63,8 +63,8 @@ def primeFactors(long n) {
 }
 
 def sumUpTo(long k) {
-    k = k % 1000000007l
-    long sum = ((k * (k+1))/ 2).toBigInteger() % 1000000007l
+    long smallk = k % 1000000007l
+    long sum = ((smallk * (smallk+1))/ 2).toBigInteger() % 1000000007l
     return sum
 }
 
@@ -73,7 +73,7 @@ def incExc(long a, long b, long k, List<Long> factors) {
     long s1 = (sumUpTo((b/k).longValue()) * smallk) % 1000000007
     long s2 = (sumUpTo(((a-1)/k).longValue()) * smallk) % 1000000007
 
-    long sum = (s1 - s2 + 1000000007l) % 1000000007l
+    long sum = (s1 - s2) % 1000000007l
 
     for (int i = 0; i < factors.size(); i++) {
         sum -= incExc(a, b, (k * factors[i]).longValue(), factors.subList(i+1, factors.size()))
