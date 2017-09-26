@@ -16,8 +16,6 @@ public class Solution {
         int m = Integer.parseInt(tk.nextToken());
         int q = Integer.parseInt(tk.nextToken());
 
-        //int[] map = new int[n*m];
-
         Graph<Integer> map = new Graph<>();
 
         String input;
@@ -25,38 +23,37 @@ public class Solution {
         boolean island;
         int k;
         for (int i = 0; i < n; i++) {
-            //tk = new StringTokenizer(in.readLine());
             input = in.readLine();
             for (int j = 0; j < m; j++) {
                 k = (i*m)+j;
                 cloned = false;
 
-                //island = tk.nextToken().equals("O");
                 island = input.charAt(j) == 'O';
 
-                if(j > 0) {
-                    cloned = map.cloneNode(k - 1, k, island);
+                map.addNode(k, island);
 
-                    if (cloned)
-                        map.mergeNode(k - m - 1, k);
-                    else
-                        cloned = map.cloneNode(k - m - 1, k, island);
+                map.mergeNode(k - m, k);
+                if(j > 0) {
+                    map.mergeNode(k - 1, k);
+                    map.mergeNode(k - m - 1, k);
                 }
 
-                if(cloned)
-                    map.mergeNode(k - m, k);
-                else
-                    cloned = map.cloneNode(k - m, k, island);
-
-                if(!cloned)
-                    map.addNode(k, island);
             }
         }
 
-        System.out.println(map.toString(n, m));
+        for (int i = 0; i < q; i++) {
+            tk = new StringTokenizer(in.readLine());
+
+            int x1 = Integer.parseInt(tk.nextToken()) - 1;
+            int y1 = Integer.parseInt(tk.nextToken()) - 1;
+            int x2 = Integer.parseInt(tk.nextToken()) - 1;
+            int y2 = Integer.parseInt(tk.nextToken()) - 1;
+
+            System.out.println(map.search((x1*m)+y1, (x2*m)+y2));
+        }
     }
 
-    static private class Graph<V> {
+    private static class Graph<V> {
 
         HashMap<V, Node> nodes;
 
@@ -107,7 +104,10 @@ public class Solution {
         public void mergeNode(V v, V w) {
             Node n1 = nodes.get(v);
             Node n2 = nodes.get(w);
-            if(n1 != null && n2 != null && n1 != n2 && n1.island == n2.island) {
+            if(n1 == null || n2 == null || n1 == n2)
+                return;
+
+            if(n1.island == n2.island) {
                 n2.neighbors.remove(n1);
                 for (Node n : n2.neighbors) {
                     n.neighbors.remove(n2);
@@ -119,20 +119,61 @@ public class Solution {
                 n1.neighbors.addAll(n2.neighbors);
                 n1.keys.addAll(n2.keys);
             }
+            else {
+                n1.neighbors.add(n2);
+                n2.neighbors.add(n1);
+            }
         }
 
         public void addArc(V v, V w) {
             Node n1 = nodes.get(v);
             Node n2 = nodes.get(w);
-            n1.neighbors.add(n1);
-            n2.neighbors.add(n2);
+            n1.neighbors.add(n2);
+            n2.neighbors.add(n1);
         }
 
         public void removeArc(V v, V w) {
             Node n1 = nodes.get(v);
             Node n2 = nodes.get(w);
-            n1.neighbors.remove(n1);
-            n2.neighbors.remove(n2);
+            n1.neighbors.remove(n2);
+            n2.neighbors.remove(n1);
+        }
+
+        public int search(V from, V to) {
+            PriorityQueue<Node> pq = new PriorityQueue<>(100, new Comparator<Node>() {
+                @Override
+                public int compare(Node o1, Node o2) {
+                    if(o1 == null || o2 == null || o1.island == o2.island)
+                        return 0;
+
+                    if(o1.island)
+                        return 1;
+                    else
+                        return -1;
+                }
+            });
+
+            for (Node n : nodes.values()) {
+                n.visited = false;
+            }
+
+            Node origin = nodes.get(from);
+            Node target = nodes.get(to);
+            Node current;
+            int count = 0;
+
+            pq.add(origin);
+
+            while((current = pq.poll()) != target) {
+                if(!current.visited) {
+                    current.visited = true;
+                    if (current.island)
+                        count++;
+                    pq.addAll(current.neighbors);
+                }
+            }
+
+            return count;
         }
 
         public String toString(int height, int width) {
@@ -154,6 +195,18 @@ public class Solution {
                     }
                     sb.append(label);
                     sb.append(' ');
+                }
+                sb.append('\n');
+            }
+
+            sb.append('\n');
+
+            for (Node n : labels.keySet()) {
+                sb.append(labels.get(n));
+                sb.append(" -> ");
+                for (Node ady : n.neighbors) {
+                    sb.append(labels.get(ady));
+                    sb.append(", ");
                 }
                 sb.append('\n');
             }
